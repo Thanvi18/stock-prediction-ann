@@ -14,7 +14,7 @@ st.set_page_config(page_title="Stock Predictor", layout="wide")
 
 st.title("📊 AI Stock Price Prediction Dashboard")
 
-# Dropdown
+# Dropdown stocks
 stocks = {
     "Reliance": "RELIANCE.NS",
     "TCS": "TCS.NS",
@@ -51,11 +51,11 @@ if st.button("Analyze"):
 
         X, y = np.array(X), np.array(y)
 
-        # ✅ Linear Regression Model (instead of ANN)
+        # Model (Linear Regression)
         model = LinearRegression()
         model.fit(X, y)
 
-        # Prediction
+        # Predictions
         pred = model.predict(X)
         pred = pred.reshape(-1,1)
         pred = scaler.inverse_transform(pred)
@@ -66,14 +66,15 @@ if st.button("Analyze"):
         rmse = math.sqrt(mean_squared_error(actual, pred))
         st.metric("📉 RMSE", f"{rmse:.2f}")
 
-        # Monthly graph
+        # Monthly Analysis (FIXED 'ME')
         df = pd.DataFrame({
             'Actual': actual.flatten(),
             'Predicted': pred.flatten()
         }, index=data.index[30:])
 
-        monthly = df.resample('M').mean()
+        monthly = df.resample('ME').mean()
 
+        # Graph
         fig, ax = plt.subplots()
         ax.plot(monthly.index.strftime('%b-%y'), monthly['Actual'], marker='o', label='Actual')
         ax.plot(monthly.index.strftime('%b-%y'), monthly['Predicted'], marker='o', label='Predicted')
@@ -91,7 +92,7 @@ if st.button("Analyze"):
         st.subheader("🔮 Next Day Prediction")
         st.write(f"₹ {next_pred[0][0]:.2f}")
 
-        # Decision
+        # Investment Suggestion
         last_actual = monthly['Actual'].iloc[-1]
         last_pred = monthly['Predicted'].iloc[-1]
 
