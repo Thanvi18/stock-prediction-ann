@@ -5,15 +5,14 @@ import matplotlib.pyplot as plt
 import yfinance as yf
 from datetime import datetime, timedelta
 from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
+from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 import math
 
 # Page config
 st.set_page_config(page_title="Stock Predictor", layout="wide")
 
-st.title("📊 AI Stock Price Prediction using ANN")
+st.title("📊 AI Stock Price Prediction Dashboard")
 
 # Dropdown
 stocks = {
@@ -40,9 +39,11 @@ if st.button("Analyze"):
     else:
         prices = data['Close'].values.reshape(-1,1)
 
+        # Scaling
         scaler = MinMaxScaler()
         scaled = scaler.fit_transform(prices)
 
+        # Prepare dataset
         X, y = [], []
         for i in range(30, len(scaled)):
             X.append(scaled[i-30:i, 0])
@@ -50,24 +51,20 @@ if st.button("Analyze"):
 
         X, y = np.array(X), np.array(y)
 
-        # ANN Model
-        model = Sequential()
-        model.add(Dense(50, activation='relu', input_dim=30))
-        model.add(Dense(25, activation='relu'))
-        model.add(Dense(1))
-
-        model.compile(optimizer='adam', loss='mean_squared_error')
-        model.fit(X, y, epochs=10, batch_size=16, verbose=0)
+        # ✅ Linear Regression Model (instead of ANN)
+        model = LinearRegression()
+        model.fit(X, y)
 
         # Prediction
         pred = model.predict(X)
+        pred = pred.reshape(-1,1)
         pred = scaler.inverse_transform(pred)
 
         actual = prices[30:]
 
         # RMSE
         rmse = math.sqrt(mean_squared_error(actual, pred))
-        st.metric("RMSE", f"{rmse:.2f}")
+        st.metric("📉 RMSE", f"{rmse:.2f}")
 
         # Monthly graph
         df = pd.DataFrame({
@@ -85,13 +82,13 @@ if st.button("Analyze"):
         plt.grid()
         st.pyplot(fig)
 
-        # Next day prediction
+        # Next Day Prediction
         last_30 = scaled[-30:]
         next_input = last_30.reshape(1, -1)
         next_pred = model.predict(next_input)
         next_pred = scaler.inverse_transform(next_pred)
 
-        st.subheader("Next Day Prediction")
+        st.subheader("🔮 Next Day Prediction")
         st.write(f"₹ {next_pred[0][0]:.2f}")
 
         # Decision
@@ -100,7 +97,7 @@ if st.button("Analyze"):
 
         change = ((last_pred - last_actual) / last_actual) * 100
 
-        st.subheader("Investment Suggestion")
+        st.subheader("📊 Investment Suggestion")
 
         if change > 5:
             st.success("🚀 Strong Buy")
